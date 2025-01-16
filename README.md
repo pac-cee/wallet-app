@@ -1,192 +1,284 @@
-# TASKforce Wallet App
+# 💰 TASKforce Wallet App
 
-A modern, full-stack personal finance management application built with React, TypeScript, Node.js, and MongoDB.
+A comprehensive, full-stack personal finance management application with powerful features for tracking expenses, managing multiple wallets, and visualizing your financial journey.
 
-## Features
+## 📚 Table of Contents
+- [Features](#-features)
+- [Technical Stack](#-technical-stack)
+- [Prerequisites](#-prerequisites)
+- [Installation Guide](#-installation-guide)
+- [Development Setup](#-development-setup)
+- [Project Structure](#-project-structure)
+- [Usage Guide](#-usage-guide)
+- [Git LFS Setup](#-git-lfs-setup)
+- [Deployment](#-deployment)
+- [Contributing](#-contributing)
+- [Troubleshooting](#-troubleshooting)
 
-- 💰 **Multi-wallet Management**: Create and manage multiple wallets with different currencies
-- 📊 **Transaction Tracking**: Record and categorize income and expenses
-- 🏷️ **Custom Categories**: Create and manage custom categories for better organization
-- 📈 **Dashboard Analytics**: Visual representation of your financial data
-- 🔐 **Secure Authentication**: JWT-based authentication system
-- 🌙 **Dark Mode**: Toggle between light and dark themes
-- 📱 **Responsive Design**: Works seamlessly on desktop and mobile devices
+## 🌟 Features
 
-## Tech Stack
+### Core Features
+- 💳 **Multi-Wallet Management**
+  - Create unlimited wallets
+  - Support for multiple currencies
+  - Real-time balance tracking
+  - Inter-wallet transfers
 
-### Frontend
-- React with TypeScript
-- Material-UI for UI components
-- Context API for state management
-- Axios for API calls
-- Framer Motion for animations
-- Nivo for charts and visualizations
+- 📊 **Advanced Transaction Tracking**
+  - Income and expense logging
+  - Recurring transactions
+  - Bulk transaction import/export
+  - Receipt image attachments
 
-### Backend
-- Node.js with Express
-- MongoDB with Mongoose
-- JWT for authentication
-- bcrypt for password hashing
-- Express Validator for input validation
+- 🎯 **Budgeting Tools**
+  - Monthly budget setting
+  - Category-wise budget limits
+  - Budget vs. actual analysis
+  - Overspending alerts
 
-## Prerequisites
+- 📈 **Analytics Dashboard**
+  - Expense patterns visualization
+  - Income trends analysis
+  - Category-wise breakdown
+  - Custom date range reports
 
-Before you begin, ensure you have installed:
-- Node.js (v14 or higher)
-- MongoDB (v4.4 or higher)
-- npm or yarn package manager
+### Additional Features
+- 🌙 Dark/Light theme support
+- 📱 Responsive design for all devices
+- 🔔 Push notifications
+- 📤 Data export functionality
+- 🔒 Enhanced security features
 
-## Installation
+## 🛠 Technical Stack
 
-1. Clone the repository:
-```bash
-git clone https://github.com/pac-cee/Task-Force-2.0.git
-cd Task-Force-2.0
+### Frontend Architecture
+```
+React + TypeScript
+├── Material-UI (UI Components)
+├── Framer Motion (Animations)
+├── Nivo Charts (Data Visualization)
+├── Axios (API Client)
+└── Context API (State Management)
 ```
 
-2. Install backend dependencies:
+### Backend Architecture
+```
+Node.js + Express
+├── MongoDB (Database)
+├── JWT (Authentication)
+├── Express Validator (Input Validation)
+└── Mongoose (ODM)
+```
+
+## ⚡ Prerequisites
+
+1. **Required Software**
+   - Node.js (v14 or higher)
+   - Git with LFS support
+   - MongoDB (v4.4 or higher)
+   - npm or yarn
+
+2. **Development Tools**
+   - VS Code (recommended)
+   - MongoDB Compass (optional)
+   - Postman (API testing)
+
+## 📥 Installation Guide
+
+### 1. Git LFS Setup (Important!)
+```bash
+# Install Git LFS
+git lfs install
+
+# Clone with LFS support
+git clone https://github.com/pac-cee/Taskforce_2.0.git
+cd Taskforce_2.0
+
+# Pull LFS objects
+git lfs pull
+```
+
+### 2. Backend Setup
 ```bash
 cd backend
-npm install
-```
 
-3. Install frontend dependencies:
-```bash
-cd ../frontend
+# Install dependencies
 npm install
-```
 
-4. Create a .env file in the backend directory:
-```env
+# Create environment file
+cp .env.example .env
+
+# Required .env configurations
 PORT=5002
 MONGODB_URI=mongodb://localhost:27017/wallet-app
-JWT_SECRET=your_jwt_secret_here
+JWT_SECRET=your_secure_secret
 NODE_ENV=development
 ```
 
-5. Create a .env file in the frontend directory:
-```env
+### 3. Frontend Setup
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Create environment file
+cp .env.example .env
+
+# Required .env configurations
 REACT_APP_API_URL=http://localhost:5002/api
+REACT_APP_ENV=development
 ```
 
-## Running the Application
+## 🚀 Development Setup
 
-1. Start the backend server:
+### Starting Development Servers
+
+1. **Backend Server**
 ```bash
 cd backend
 npm run dev
 ```
 
-2. Start the frontend development server:
+2. **Frontend Development**
 ```bash
 cd frontend
 npm start
 ```
 
-The application will be available at `http://localhost:3000`
+### Available Scripts
+- `npm run dev`: Development mode
+- `npm run build`: Production build
+- `npm run test`: Run tests
+- `npm run lint`: Code linting
 
-## Testing the Application
+## 📁 Project Structure
+```
+wallet-app/
+├── frontend/                 # React frontend
+│   ├── public/              # Static files
+│   ├── src/
+│   │   ├── components/     # Reusable components
+│   │   ├── pages/         # Page components
+│   │   ├── contexts/      # React contexts
+│   │   ├── hooks/        # Custom hooks
+│   │   ├── services/     # API services
+│   │   └── utils/        # Helper functions
+│   └── package.json
+│
+├── backend/                 # Node.js backend
+│   ├── controllers/        # Route controllers
+│   ├── models/            # Database models
+│   ├── routes/            # API routes
+│   ├── middleware/        # Custom middleware
+│   ├── utils/            # Helper functions
+│   └── package.json
+│
+├── .gitattributes          # Git LFS configuration
+├── .gitignore             # Git ignore rules
+└── README.md
+```
 
-1. **Create a New Account**:
-   - Visit http://localhost:3000/register
-   - Fill in your details (name, email, password)
-   - Click "Register"
+## 🔧 Git LFS Configuration
 
-2. **Login**:
-   - Visit http://localhost:3000/login
-   - Enter your email and password
-   - Click "Login"
+### Tracked Files
+```gitattributes
+# Large Files
+**/node_modules/** filter=lfs diff=lfs merge=lfs -text
+**/.cache/** filter=lfs diff=lfs merge=lfs -text
+*.pack filter=lfs diff=lfs merge=lfs -text
 
-3. **Create a Wallet**:
-   - Click "Add Wallet" on the dashboard
-   - Enter wallet name and initial balance
-   - Select currency
-   - Click "Create"
+# Media Files
+*.png filter=lfs diff=lfs merge=lfs -text
+*.jpg filter=lfs diff=lfs merge=lfs -text
+*.gif filter=lfs diff=lfs merge=lfs -text
+```
 
-4. **Add Categories**:
-   - Go to Categories page
-   - Click "Add Category"
-   - Enter category name
-   - Select type (Income/Expense)
-   - Choose color
-   - Click "Create"
+### Ignored Patterns
+```gitignore
+# Development
+.cache/
+node_modules/.cache/
+**/default-development/
+*.pack
+```
 
-5. **Record Transactions**:
-   - Click "Add Transaction" on the dashboard
-   - Select transaction type
-   - Choose category and wallet
-   - Enter amount and description
-   - Click "Add"
+## 🚀 Deployment
 
-6. **View Reports**:
-   - Navigate to the Dashboard
-   - View spending patterns
-   - Check budget progress
-   - Analyze income vs expenses
+### Production Build
+1. Frontend:
+```bash
+cd frontend
+npm run build
+```
 
-## Features in Detail
+2. Backend:
+```bash
+cd backend
+npm run build
+```
 
-### Wallet Management
-- Create multiple wallets
-- Track balance for each wallet
-- Support for different currencies
-- Transfer between wallets
+### Deployment Checklist
+- [ ] Update environment variables
+- [ ] Build production assets
+- [ ] Configure MongoDB connection
+- [ ] Set up SSL certificates
+- [ ] Configure CORS settings
+- [ ] Set up process manager (PM2)
 
-### Transaction Management
-- Record income and expenses
-- Categorize transactions
-- Add notes and dates
-- Filter and search transactions
-- Export transaction history
-
-### Category Management
-- Create custom categories
-- Assign colors to categories
-- Organize by income/expense
-- Set budget limits per category
-
-### Reports and Analytics
-- Monthly summary
-- Category-wise breakdown
-- Income vs Expense trends
-- Budget tracking
-- Custom date range reports
-
-### User Settings
-- Profile management
-- Password change
-- Notification preferences
-- Theme customization
-- Currency preferences
-
-## Security Features
-
-- Password hashing using bcrypt
-- JWT-based authentication
-- Protected API routes
-- Input validation and sanitization
-- CORS protection
-- Rate limiting
-
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create your feature branch
+3. Install Git LFS
+4. Make your changes
+5. Run tests
+6. Submit PR
 
-## License
+## ❗ Troubleshooting
 
-This project is licensed under the MIT License - see the LICENSE file for details
+### Common Issues
 
-## Support
+1. **Git LFS Issues**
+```bash
+# Verify LFS installation
+git lfs install
 
-For support, email support@taskforce.com or join our Slack channel.
+# Reset LFS
+git lfs uninstall
+git lfs install
+```
 
-## Acknowledgments
+2. **Node Modules Issues**
+```bash
+# Clear npm cache
+npm cache clean --force
 
-- Material-UI for the awesome component library
-- Nivo for the beautiful charts
-- The MongoDB team for the amazing database
-- The open-source community for their invaluable contributions
+# Reinstall dependencies
+rm -rf node_modules
+npm install
+```
+
+3. **MongoDB Connection**
+- Check MongoDB service is running
+- Verify connection string
+- Check network access
+
+### Support Channels
+- GitHub Issues
+- Documentation Wiki
+- Community Discord
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🙏 Acknowledgments
+
+- Material-UI team
+- MongoDB team
+- Open source community
+- All contributors
+
+---
+For detailed documentation, visit our [Wiki](https://github.com/pac-cee/Taskforce_2.0/wiki)
