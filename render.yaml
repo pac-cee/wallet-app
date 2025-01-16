@@ -2,7 +2,8 @@ services:
   # Backend API Service
   - type: web
     name: wallet-app-backend
-    env: node
+    runtime: node
+    plan: free
     buildCommand: cd backend && npm install && npm run build
     startCommand: cd backend && npm start
     envVars:
@@ -14,17 +15,16 @@ services:
         sync: false
       - key: MONGODB_URI
         sync: false
+      - key: CORS_ORIGIN
+        value: https://wallet-app-frontend.onrender.com
 
   # Frontend Service
   - type: web
     name: wallet-app-frontend
-    env: static
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: ./frontend/build
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./build
     envVars:
       - key: REACT_APP_API_URL
         value: https://wallet-app-backend.onrender.com/api
-    headers:
-      - path: /*
-        name: Cache-Control
-        value: no-cache

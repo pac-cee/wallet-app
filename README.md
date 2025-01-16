@@ -14,6 +14,7 @@ A comprehensive, full-stack personal finance management application with powerfu
 - [Deployment](#-deployment)
 - [Contributing](#-contributing)
 - [Troubleshooting](#-troubleshooting)
+- [Task Force Pro Edition](#-task-force-pro-edition---wallet-web-application)
 
 ## 🌟 Features
 
@@ -226,6 +227,29 @@ npm run build
 - [ ] Configure CORS settings
 - [ ] Set up process manager (PM2)
 
+### Environment Variables
+
+#### Backend (.env.production)
+```
+NODE_ENV=production
+PORT=5002
+MONGODB_URI=your_mongodb_uri
+JWT_SECRET=your_jwt_secret
+CORS_ORIGIN=https://wallet-app-frontend.onrender.com
+```
+
+#### Frontend (.env.production)
+```
+REACT_APP_API_URL=https://wallet-app-backend.onrender.com/api
+```
+
+### Deployment Steps
+
+1. Push your code to GitHub
+2. Create a new Web Service on Render.com
+3. Connect your GitHub repository
+4. Render will automatically deploy both frontend and backend using the configuration in render.yaml
+
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -279,6 +303,52 @@ This project is licensed under the MIT License.
 - MongoDB team
 - Open source community
 - All contributors
+
+## 🚀 Task Force Pro Edition - Wallet Web Application
+
+### Use Case
+Eric, an employee of Code of Africa GmbH, needs a web application to manage his various financial accounts (bank accounts, mobile money, cash, etc.) and track his expenses efficiently.
+
+### 🎯 Core Functionalities
+
+1. **Multi-Account Transaction Tracking**
+   - Track all income and expenses across different accounts
+   - Support for bank accounts, mobile money, and cash
+   - Real-time balance updates
+   - Transaction history with search and filter options
+
+2. **Custom Report Generation**
+   - Generate detailed financial reports for any time period
+   - Export reports in multiple formats
+   - Visual representation of income vs expenses
+   - Category-wise spending analysis
+
+3. **Smart Budget Management**
+   - Set monthly/yearly budgets for different categories
+   - Real-time budget tracking
+   - Instant notifications when budget limits are exceeded
+   - Budget vs actual spending comparison
+
+4. **Category Management**
+   - Create and manage expense categories
+   - Add subcategories for detailed expense tracking
+   - Color coding for easy visualization
+   - Category-wise spending insights
+
+5. **Expense Categorization**
+   - Link each transaction to specific categories/subcategories
+   - Automatic category suggestions based on transaction patterns
+   - Bulk categorization for multiple transactions
+   - Edit category assignments
+
+6. **Visual Analytics**
+   - Interactive dashboards with spending patterns
+   - Category-wise pie charts and bar graphs
+   - Time-series analysis of expenses
+   - Budget utilization visualization
+
+### 🌐 Live Demo
+The application is deployed and accessible at: [https://taskforce-wallet.onrender.com](https://taskforce-wallet.onrender.com)
 
 ---
 For detailed documentation, visit our [Wiki](https://github.com/pac-cee/Taskforce_2.0/wiki)

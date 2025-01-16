@@ -21,15 +21,11 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error('User already exists');
   }
 
-  // Hash password
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-
-  // Create user
+  // Create user (password will be hashed by the pre-save hook)
   const user = await User.create({
     name,
     email,
-    password: hashedPassword,
+    password
   });
 
   if (user) {
@@ -51,7 +47,7 @@ const loginUser = asyncHandler(async (req, res) => {
   // Check for user email
   const user = await User.findOne({ email });
 
-  if (user && (await bcrypt.compare(password, user.password))) {
+  if (user && (await user.matchPassword(password))) {
     res.json({
       token: generateToken(user._id),
     });
@@ -100,44 +96,34 @@ const updateProfile = asyncHandler(async (req, res) => {
 // @route   PUT /api/auth/password
 // @access  Private
 const updatePassword = asyncHandler(async (req, res) => {
-  const { oldPassword, newPassword } = req.body;
+  const { currentPassword, newPassword } = req.body;
   const user = await User.findById(req.user._id);
 
-  if (user && (await bcrypt.compare(oldPassword, user.password))) {
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(newPassword, salt);
+  if (user && (await user.matchPassword(currentPassword))) {
+    user.password = newPassword;
     await user.save();
     res.json({ message: 'Password updated successfully' });
   } else {
     res.status(401);
-    throw new Error('Invalid old password');
+    throw new Error('Invalid current password');
   }
 });
 
-// @desc    Forgot password
+// @desc    Request password reset
 // @route   POST /api/auth/forgot-password
 // @access  Public
 const forgotPassword = asyncHandler(async (req, res) => {
-  const { email } = req.body;
-  const user = await User.findOne({ email });
-
-  if (!user) {
-    res.status(404);
-    throw new Error('User not found');
-  }
-
-  // For now, just return success
-  // In a real app, you would send a password reset email
-  res.json({ message: 'Password reset instructions sent to your email' });
+  // In a real app, you would:
+  // 1. Generate a reset token
+  // 2. Save it to the user document with an expiry
+  // 3. Send an email with the reset link
+  res.json({ message: 'Reset instructions sent to email' });
 });
 
 // @desc    Reset password
 // @route   POST /api/auth/reset-password
 // @access  Public
 const resetPassword = asyncHandler(async (req, res) => {
-  const { token, password } = req.body;
-
-  // For now, just return success
   // In a real app, you would verify the token and update the password
   res.json({ message: 'Password reset successful' });
 });

@@ -2,7 +2,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const morgan = require('morgan');
-require('dotenv').config();
+const path = require('path');
+const dotenv = require('dotenv');
+
+// Load environment variables based on NODE_ENV
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+dotenv.config({ path: path.join(__dirname, envFile) });
+
+console.log('MongoDB URI:', process.env.MONGODB_URI); // For debugging
 
 const app = express();
 
@@ -35,13 +42,30 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/transactions', require('./routes/transactionRoutes'));
 app.use('/api/wallets', require('./routes/walletRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
+app.use('/api/budgets', require('./routes/budgetRoutes'));
+app.use('/api/reports', require('./routes/reportRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+  console.error('Error:', err);
+  
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      error: 'Validation Error',
+      message: err.message
+    });
+  }
+  
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({
+      error: 'Unauthorized',
+      message: 'Invalid token or no token provided'
+    });
+  }
+  
+  res.status(err.status || 500).json({
+    error: err.name || 'Internal Server Error',
+    message: err.message || 'Something went wrong'
   });
 });
 
@@ -52,8 +76,11 @@ const connectWithRetry = async () => {
   const options = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000,
-    socketTimeoutMS: 45000,
+    serverSelectionTimeoutMS: 10000,
+    heartbeatFrequencyMS: 2000,
+    retryWrites: true,
+    w: 'majority',
+    dbName: 'wallet-app1'
   };
 
   try {
