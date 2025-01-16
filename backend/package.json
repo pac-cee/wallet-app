@@ -1,11 +1,15 @@
 {
   "name": "wallet-app-backend",
   "version": "1.0.0",
-  "description": "Backend for the Wallet Application",
+  "description": "Backend for Wallet Application",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "build": "echo 'No build step required for backend'"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -16,8 +20,7 @@
     "express-validator": "^7.0.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.6.3",
-    "morgan": "^1.10.0",
-    "wallet-app-backend": "file:"
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

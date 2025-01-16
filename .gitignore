@@ -1,3 +1,13 @@
+# Add these at the top of your .gitignore
+# Strict cache ignores
+**/.cache
+**/.cache/
+**/.cache/**
+**/node_modules/.cache
+**/node_modules/.cache/**
+**/default-development
+**/default-development/**
+
 # Dependencies
 node_modules/
 /.pnp
@@ -59,3 +69,9 @@ debug.log
 .Trashes
 ehthumbs.db
 Desktop.ini
+
+# Cache and large files
+**/node_modules/.cache/
+**/node_modules/.cache/default-development/
+*.pack
+**/*.pack
