@@ -1,7 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="192" height="192" rx="32" fill="#1E1E2D"/>
-  <path d="M48 72C48 63.1634 55.1634 56 64 56H128C136.837 56 144 63.1634 144 72V120C144 128.837 136.837 136 128 136H64C55.1634 136 48 128.837 48 120V72Z" fill="#6366F1"/>
-  <path d="M144 88H128C122.477 88 118 92.4772 118 98V94C118 99.5228 122.477 104 128 104H144V88Z" fill="#818CF8"/>
-  <circle cx="128" cy="96" r="4" fill="#1E1E2D"/>
-</svg>
+version https://git-lfs.github.com/spec/v1
+oid sha256:228281a287b4676207d01a783223817aea1d4d5a37cb454c5f7c1da7e6a2fb41
+size 539
