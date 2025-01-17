@@ -2,15 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
-  Card,
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
-  TextField,
-  Typography,
+  DialogContent,
+  DialogTitle,
   IconButton,
-  CircularProgress,
   MenuItem,
   Table,
   TableBody,
@@ -18,8 +14,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
+  Typography,
   Paper,
-  Chip,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -28,65 +25,44 @@ import {
   ArrowUpward as IncomeIcon,
   ArrowDownward as ExpenseIcon,
 } from '@mui/icons-material';
-import { transactionsAPI, walletsAPI, categoriesAPI } from '../services/api';
+import { transactionsAPI } from '../services/transactionsAPI';
+import { accountsAPI } from '../services/accountsAPI';
+import { categoriesAPI } from '../services/categoriesAPI';
 import { useAuth } from '../contexts/AuthContext';
-
-interface Transaction {
-  _id: string;
-  description: string;
-  amount: number;
-  type: 'income' | 'expense';
-  category: string;
-  wallet: string;
-  date: string;
-}
-
-interface Category {
-  _id: string;
-  name: string;
-  type: 'income' | 'expense';
-  color: string;
-}
-
-interface Wallet {
-  _id: string;
-  name: string;
-  balance: number;
-}
+import CreateTestTransactions from '../components/transaction/CreateTestTransactions';
+import { Transaction, Category, Account } from '../types';
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
-    type: 'expense',
+    type: 'expense' as 'income' | 'expense',
     category: '',
-    wallet: '',
+    account: '',
     date: new Date().toISOString().split('T')[0],
   });
   const [error, setError] = useState('');
+  const { user } = useAuth();
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [transactionsRes, categoriesRes, walletsRes] = await Promise.all([
+      const [transactionsRes, categoriesRes, accountsRes] = await Promise.all([
         transactionsAPI.getAll(),
         categoriesAPI.getAll(),
-        walletsAPI.getAll(),
+        accountsAPI.getAll(),
       ]);
-
       setTransactions(transactionsRes.data);
       setCategories(categoriesRes.data);
-      setWallets(walletsRes.data);
+      setAccounts(accountsRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -101,8 +77,8 @@ const Transactions = () => {
         description: transaction.description,
         amount: transaction.amount.toString(),
         type: transaction.type,
-        category: transaction.category,
-        wallet: transaction.wallet,
+        category: typeof transaction.category === 'string' ? transaction.category : transaction.category._id,
+        account: typeof transaction.account === 'string' ? transaction.account : transaction.account._id,
         date: new Date(transaction.date).toISOString().split('T')[0],
       });
     } else {
@@ -112,48 +88,35 @@ const Transactions = () => {
         amount: '',
         type: 'expense',
         category: '',
-        wallet: '',
+        account: '',
         date: new Date().toISOString().split('T')[0],
       });
     }
     setOpenDialog(true);
-    setError('');
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setSelectedTransaction(null);
+    setError('');
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
-    const name = e.target.name as string;
-    const value = e.target.value;
-    
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-      // Reset category when type changes to ensure category matches transaction type
-      ...(name === 'type' ? { category: '' } : {}),
-    }));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
     setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate required fields
-    if (!formData.description.trim()) {
-      setError('Description is required');
+    setError('');
+
+    if (!formData.description) {
+      setError('Please enter a description');
       return;
     }
 
-    if (!formData.amount || isNaN(parseFloat(formData.amount)) || parseFloat(formData.amount) <= 0) {
-      setError('Please enter a valid positive amount');
-      return;
-    }
-
-    if (!formData.type || !['income', 'expense'].includes(formData.type)) {
-      setError('Please select a valid type');
+    if (!formData.amount || isNaN(Number(formData.amount))) {
+      setError('Please enter a valid amount');
       return;
     }
 
@@ -162,40 +125,22 @@ const Transactions = () => {
       return;
     }
 
-    if (!formData.wallet) {
-      setError('Please select a wallet');
-      return;
-    }
-
-    if (!formData.date || isNaN(Date.parse(formData.date)) || new Date(formData.date) > new Date()) {
-      setError('Please select a valid date not in the future');
+    if (!formData.account) {
+      setError('Please select an account');
       return;
     }
 
     try {
-      const transactionData = {
-        ...formData,
-        description: formData.description.trim(),
-        amount: parseFloat(formData.amount),
-        date: new Date(formData.date).toISOString(),
-      };
-
       if (selectedTransaction) {
-        await transactionsAPI.update(selectedTransaction._id, transactionData);
+        await transactionsAPI.update(selectedTransaction._id, formData);
       } else {
-        await transactionsAPI.create(transactionData);
+        await transactionsAPI.create(formData);
       }
       handleCloseDialog();
       fetchData();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving transaction:', error);
-      if (error.response?.status === 400) {
-        setError(error.response.data.message || 'Invalid transaction data');
-      } else if (error.response?.status === 404) {
-        setError('Selected wallet or category not found');
-      } else {
-        setError('Failed to save transaction. Please try again.');
-      }
+      setError('Failed to save transaction');
     }
   };
 
@@ -203,18 +148,17 @@ const Transactions = () => {
     const transaction = transactions.find(t => t._id === id);
     if (!transaction) return;
 
-    const wallet = getWalletById(transaction.wallet);
-    if (!wallet) return;
+    const account = getAccountById(typeof transaction.account === 'string' ? transaction.account : transaction.account._id);
+    if (!account) return;
 
-    const message = `Are you sure you want to delete this transaction?\n\nDescription: ${transaction.description}\nAmount: $${transaction.amount.toFixed(2)}\nWallet: ${wallet.name}\nDate: ${new Date(transaction.date).toLocaleDateString()}\n\nThis action cannot be undone.`;
+    const message = `Are you sure you want to delete this transaction?\n\nDescription: ${transaction.description}\nAmount: $${transaction.amount.toFixed(2)}\nAccount: ${account.name}\nDate: ${new Date(transaction.date).toLocaleDateString()}\n\nThis action cannot be undone.`;
 
     if (window.confirm(message)) {
       try {
         await transactionsAPI.delete(id);
         fetchData();
-      } catch (error: any) {
+      } catch (error) {
         console.error('Error deleting transaction:', error);
-        alert('Failed to delete transaction. Please try again.');
       }
     }
   };
@@ -223,12 +167,12 @@ const Transactions = () => {
     return categories.find((cat) => cat._id === id);
   };
 
-  const getWalletById = (id: string) => {
-    return wallets.find((wallet) => wallet._id === id);
+  const getAccountById = (id: string) => {
+    return accounts.find((account) => account._id === id);
   };
 
   const renderTransactionForm = () => (
-    <Box component="form" onSubmit={handleSubmit} noValidate>
+    <form onSubmit={handleSubmit}>
       <TextField
         fullWidth
         margin="normal"
@@ -238,6 +182,7 @@ const Transactions = () => {
         onChange={handleChange}
         required
       />
+
       <TextField
         fullWidth
         margin="normal"
@@ -248,6 +193,7 @@ const Transactions = () => {
         onChange={handleChange}
         required
       />
+
       <TextField
         fullWidth
         margin="normal"
@@ -261,6 +207,7 @@ const Transactions = () => {
         <MenuItem value="income">Income</MenuItem>
         <MenuItem value="expense">Expense</MenuItem>
       </TextField>
+
       <TextField
         fullWidth
         margin="normal"
@@ -272,29 +219,31 @@ const Transactions = () => {
         required
       >
         {categories
-          .filter(category => category.type === formData.type)
+          .filter(cat => cat.type === formData.type)
           .map(category => (
             <MenuItem key={category._id} value={category._id}>
               {category.name}
             </MenuItem>
           ))}
       </TextField>
+
       <TextField
         fullWidth
         margin="normal"
         select
-        label="Wallet"
-        name="wallet"
-        value={formData.wallet}
+        label="Account"
+        name="account"
+        value={formData.account}
         onChange={handleChange}
         required
       >
-        {wallets.map(wallet => (
-          <MenuItem key={wallet._id} value={wallet._id}>
-            {wallet.name} (Balance: ${wallet.balance.toFixed(2)})
+        {accounts.map(account => (
+          <MenuItem key={account._id} value={account._id}>
+            {account.name} (Balance: ${account.balance.toFixed(2)})
           </MenuItem>
         ))}
       </TextField>
+
       <TextField
         fullWidth
         margin="normal"
@@ -305,54 +254,34 @@ const Transactions = () => {
         onChange={handleChange}
         required
       />
+
       {error && (
-        <Typography color="error" variant="body2" sx={{ mt: 2 }}>
+        <Typography color="error" sx={{ mt: 2 }}>
           {error}
         </Typography>
       )}
-      <DialogActions>
-        <Button onClick={handleCloseDialog}>Cancel</Button>
-        <Button type="submit" variant="contained" disabled={loading}>
-          {loading ? <CircularProgress size={24} /> : selectedTransaction ? 'Update' : 'Add'} Transaction
-        </Button>
-      </DialogActions>
-    </Box>
+    </form>
   );
-
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
 
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Transactions</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-        >
-          Add Transaction
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <CreateTestTransactions 
+            categories={categories} 
+            accounts={accounts} 
+            onSuccess={fetchData} 
+          />
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+          >
+            Add Transaction
+          </Button>
+        </Box>
       </Box>
-
-      <Dialog 
-        open={openDialog} 
-        onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          {selectedTransaction ? 'Edit Transaction' : 'Add New Transaction'}
-        </DialogTitle>
-        <DialogContent>
-          {renderTransactionForm()}
-        </DialogContent>
-      </Dialog>
 
       <TableContainer component={Paper}>
         <Table>
@@ -361,39 +290,41 @@ const Transactions = () => {
               <TableCell>Date</TableCell>
               <TableCell>Description</TableCell>
               <TableCell>Category</TableCell>
-              <TableCell>Wallet</TableCell>
+              <TableCell>Account</TableCell>
               <TableCell align="right">Amount</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {transactions.map((transaction) => {
-              const category = getCategoryById(transaction.category);
-              const wallet = getWalletById(transaction.wallet);
+              const category = typeof transaction.category === 'string' 
+                ? getCategoryById(transaction.category)
+                : transaction.category;
+              const account = typeof transaction.account === 'string'
+                ? getAccountById(transaction.account)
+                : transaction.account;
               
               return (
                 <TableRow key={transaction._id}>
-                  <TableCell>
-                    {new Date(transaction.date).toLocaleDateString()}
-                  </TableCell>
+                  <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
                   <TableCell>{transaction.description}</TableCell>
                   <TableCell>
-                    <Chip
-                      label={category?.name}
-                      size="small"
-                      sx={{
-                        bgcolor: category?.color,
-                        color: 'white',
-                      }}
-                    />
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 1,
+                      color: category?.color 
+                    }}>
+                      {category?.name}
+                    </Box>
                   </TableCell>
-                  <TableCell>{wallet?.name}</TableCell>
+                  <TableCell>{account?.name}</TableCell>
                   <TableCell align="right">
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                       {transaction.type === 'income' ? (
-                        <IncomeIcon sx={{ color: 'success.main', mr: 1 }} />
+                        <IncomeIcon sx={{ color: 'success.main', mr: 1 }} fontSize="small" />
                       ) : (
-                        <ExpenseIcon sx={{ color: 'error.main', mr: 1 }} />
+                        <ExpenseIcon sx={{ color: 'error.main', mr: 1 }} fontSize="small" />
                       )}
                       ${transaction.amount.toFixed(2)}
                     </Box>
@@ -420,6 +351,21 @@ const Transactions = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {selectedTransaction ? 'Edit Transaction' : 'Add Transaction'}
+        </DialogTitle>
+        <DialogContent>
+          {renderTransactionForm()}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleSubmit} variant="contained" color="primary">
+            {selectedTransaction ? 'Save Changes' : 'Add Transaction'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

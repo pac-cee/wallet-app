@@ -4,13 +4,23 @@ const { protect } = require('../middleware/authMiddleware');
 const {
   createBudget,
   getBudgets,
+  updateBudget,
+  deleteBudget,
   checkBudget
 } = require('../controllers/budgetController');
 
-router.route('/')
-  .get(protect, getBudgets)
-  .post(protect, createBudget);
+// Apply auth middleware to all routes
+router.use(protect);
 
-router.post('/check', protect, checkBudget);
+// Budget routes
+router.route('/')
+  .get(getBudgets)
+  .post(createBudget);
+
+router.route('/:id')
+  .put(updateBudget)
+  .delete(deleteBudget);
+
+router.post('/check', checkBudget);
 
 module.exports = router;

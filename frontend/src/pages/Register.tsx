@@ -17,7 +17,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import GoogleIcon from '@mui/icons-material/Google';
 import GitHubIcon from '@mui/icons-material/GitHub';
-import AppleIcon from '@mui/icons-material/Apple';
 import { getSocialLoginUrl } from '../utils/socialAuth';
 
 const Register = () => {
@@ -32,7 +31,7 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, loginWithGoogle, loginWithGithub, loginWithTwitter } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -134,14 +133,25 @@ const Register = () => {
     }
   };
 
-  const handleSocialLogin = (provider: 'google' | 'github' | 'apple') => {
+  const handleSocialLogin = async (provider: 'google' | 'github' | 'twitter') => {
     try {
       setError('');
       setLoading(true);
-      window.location.href = getSocialLoginUrl(provider);
+      switch (provider) {
+        case 'google':
+          await loginWithGoogle();
+          break;
+        case 'github':
+          await loginWithGithub();
+          break;
+        case 'twitter':
+          await loginWithTwitter();
+          break;
+      }
     } catch (err: any) {
       console.error('Social login error:', err);
       setError('Failed to authenticate with social provider');
+    } finally {
       setLoading(false);
     }
   };
@@ -187,15 +197,6 @@ const Register = () => {
               disabled={loading}
             >
               Continue with GitHub
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<AppleIcon />}
-              onClick={() => handleSocialLogin('apple')}
-              disabled={loading}
-            >
-              Continue with Apple
             </Button>
           </Box>
 

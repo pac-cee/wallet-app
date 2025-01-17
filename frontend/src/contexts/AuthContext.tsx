@@ -4,6 +4,7 @@ import { User, LoginForm, RegisterForm } from '../types';
 
 interface AuthContextType {
   user: User | null;
+  setUser: (user: User | null) => void;
   loading: boolean;
   error: string | null;
   isAuthenticated: boolean;
@@ -15,6 +16,9 @@ interface AuthContextType {
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (token: string, password: string) => Promise<void>;
   clearError: () => void;
+  loginWithGoogle: () => Promise<void>;
+  loginWithGithub: () => Promise<void>;
+  loginWithTwitter: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -174,10 +178,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      await authAPI.loginWithGoogle();
+    } catch (error: any) {
+      handleError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginWithGithub = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      await authAPI.loginWithGithub();
+    } catch (error: any) {
+      handleError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginWithTwitter = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      await authAPI.loginWithTwitter();
+    } catch (error: any) {
+      handleError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const clearError = () => setError(null);
 
   const value = {
     user,
+    setUser,
     loading,
     error,
     isAuthenticated: !!user,
@@ -189,9 +230,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     forgotPassword,
     resetPassword,
     clearError,
+    loginWithGoogle,
+    loginWithGithub,
+    loginWithTwitter,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {

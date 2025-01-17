@@ -53,6 +53,51 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      setError(null);
+      const response = await authAPI.loginWithGoogle();
+      const { token, ...userData } = response.data;
+      localStorage.setItem('token', token);
+      setUser(userData);
+      return true;
+    } catch (err) {
+      console.error('Google login error:', err);
+      setError(err.response?.data?.message || 'Google login failed');
+      return false;
+    }
+  };
+
+  const loginWithGithub = async () => {
+    try {
+      setError(null);
+      const response = await authAPI.loginWithGithub();
+      const { token, ...userData } = response.data;
+      localStorage.setItem('token', token);
+      setUser(userData);
+      return true;
+    } catch (err) {
+      console.error('GitHub login error:', err);
+      setError(err.response?.data?.message || 'GitHub login failed');
+      return false;
+    }
+  };
+
+  const loginWithTwitter = async () => {
+    try {
+      setError(null);
+      const response = await authAPI.loginWithTwitter();
+      const { token, ...userData } = response.data;
+      localStorage.setItem('token', token);
+      setUser(userData);
+      return true;
+    } catch (err) {
+      console.error('Twitter login error:', err);
+      setError(err.response?.data?.message || 'Twitter login failed');
+      return false;
+    }
+  };
+
   const register = async (name, email, password) => {
     try {
       setError(null);
@@ -82,6 +127,9 @@ export const AuthProvider = ({ children }) => {
     loading,
     error,
     login,
+    loginWithGoogle,
+    loginWithGithub,
+    loginWithTwitter,
     register,
     logout,
   };

@@ -21,21 +21,15 @@ import {
   Delete as DeleteIcon,
   AccountBalance as AccountIcon,
 } from '@mui/icons-material';
-import { walletsAPI } from '../services/api';
+import { accountsAPI } from '../services/accountsAPI';
 import { useAuth } from '../contexts/AuthContext';
+import { Account, AccountType, AccountFormData } from '../types';
 
-interface Wallet {
-  _id: string;
-  name: string;
-  balance: number;
-  type: string;
-  currency: string;
-}
-
-const walletTypes = [
-  { value: 'cash', label: 'Cash' },
+const accountTypes = [
   { value: 'bank', label: 'Bank Account' },
-  { value: 'credit', label: 'Credit Card' },
+  { value: 'mobile_money', label: 'Mobile Money' },
+  { value: 'cash', label: 'Cash' },
+  { value: 'credit_card', label: 'Credit Card' },
   { value: 'savings', label: 'Savings' },
   { value: 'investment', label: 'Investment' },
 ];
@@ -48,50 +42,50 @@ const currencies = [
 ];
 
 const Accounts = () => {
-  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null);
-  const [formData, setFormData] = useState({
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [formData, setFormData] = useState<AccountFormData>({
     name: '',
     balance: '',
     type: 'bank',
-    currency: 'USD',
+    currency: '',
   });
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchWallets();
+    fetchAccounts();
   }, []);
 
-  const fetchWallets = async () => {
+  const fetchAccounts = async () => {
     try {
       setLoading(true);
-      const response = await walletsAPI.getAll();
-      setWallets(response.data);
+      const response = await accountsAPI.getAll();
+      setAccounts(response.data);
     } catch (error) {
-      console.error('Error fetching wallets:', error);
+      console.error('Error fetching accounts:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOpenDialog = (wallet?: Wallet) => {
-    if (wallet) {
-      setSelectedWallet(wallet);
+  const handleOpenDialog = (account?: Account) => {
+    if (account) {
+      setSelectedAccount(account);
       setFormData({
-        name: wallet.name,
-        balance: wallet.balance.toString(),
-        type: wallet.type,
-        currency: wallet.currency,
+        name: account.name,
+        balance: account.balance.toString(),
+        type: account.type,
+        currency: account.currency,
       });
     } else {
-      setSelectedWallet(null);
+      setSelectedAccount(null);
       setFormData({
         name: '',
         balance: '',
         type: 'bank',
-        currency: 'USD',
+        currency: '',
       });
     }
     setOpenDialog(true);
@@ -100,11 +94,11 @@ const Accounts = () => {
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setSelectedWallet(null);
+    setSelectedAccount(null);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
-    const name = e.target.name as string;
+    const name = e.target.name as keyof AccountFormData;
     const value = e.target.value;
 
     setFormData((prev) => ({
@@ -139,37 +133,38 @@ const Accounts = () => {
     }
 
     try {
-      const walletData = {
+      const accountData: AccountFormData = {
         ...formData,
         name: formData.name.trim(),
-        balance: parseFloat(formData.balance),
+        balance: formData.balance,
+        type: formData.type as AccountType,
       };
 
-      if (selectedWallet) {
-        await walletsAPI.update(selectedWallet._id, walletData);
+      if (selectedAccount) {
+        await accountsAPI.update(selectedAccount._id, accountData);
       } else {
-        await walletsAPI.create(walletData);
+        await accountsAPI.create(accountData);
       }
       handleCloseDialog();
-      fetchWallets();
+      fetchAccounts();
     } catch (error: any) {
-      console.error('Error saving wallet:', error);
+      console.error('Error saving account:', error);
       setError(error.response?.data?.message || 'Failed to save account');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this wallet?')) {
+    if (window.confirm('Are you sure you want to delete this account?')) {
       try {
-        await walletsAPI.delete(id);
-        fetchWallets();
+        await accountsAPI.delete(id);
+        fetchAccounts();
       } catch (error) {
-        console.error('Error deleting wallet:', error);
+        console.error('Error deleting account:', error);
       }
     }
   };
 
-  const getWalletTypeIcon = (type: string) => {
+  const getAccountTypeIcon = (type: string) => {
     return <AccountIcon />;
   };
 
@@ -195,30 +190,30 @@ const Accounts = () => {
       </Box>
 
       <Grid container spacing={3}>
-        {wallets.map((wallet) => (
-          <Grid item xs={12} sm={6} md={4} key={wallet._id}>
+        {accounts.map((account) => (
+          <Grid item xs={12} sm={6} md={4} key={account._id}>
             <Card sx={{ p: 3, position: 'relative' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <AccountIcon sx={{ mr: 1, color: 'primary.main' }} />
-                <Typography variant="h6">{wallet.name}</Typography>
+                <Typography variant="h6">{account.name}</Typography>
               </Box>
               <Typography variant="h4" sx={{ mb: 1 }}>
-                {wallet.currency} {wallet.balance.toFixed(2)}
+                {account.currency} {account.balance.toFixed(2)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Type: {wallet.type ? wallet.type.charAt(0).toUpperCase() + wallet.type.slice(1) : 'N/A'}
+                Type: {account.type ? account.type.charAt(0).toUpperCase() + account.type.slice(1) : 'N/A'}
               </Typography>
               <Box sx={{ position: 'absolute', top: 12, right: 12 }}>
                 <IconButton
                   size="small"
-                  onClick={() => handleOpenDialog(wallet)}
+                  onClick={() => handleOpenDialog(account)}
                   sx={{ mr: 1 }}
                 >
                   <EditIcon />
                 </IconButton>
                 <IconButton
                   size="small"
-                  onClick={() => handleDelete(wallet._id)}
+                  onClick={() => handleDelete(account._id)}
                   color="error"
                 >
                   <DeleteIcon />
@@ -231,7 +226,7 @@ const Accounts = () => {
 
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
-          {selectedWallet ? 'Edit Account' : 'Add New Account'}
+          {selectedAccount ? 'Edit Account' : 'Add New Account'}
         </DialogTitle>
         <DialogContent>
           <Box component="form" sx={{ mt: 2 }}>
@@ -267,7 +262,7 @@ const Accounts = () => {
               onChange={handleChange}
               margin="normal"
             >
-              {walletTypes.map((option) => (
+              {accountTypes.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
                   {option.label}
                 </MenuItem>
@@ -298,7 +293,7 @@ const Accounts = () => {
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button onClick={handleSubmit} variant="contained">
-            {selectedWallet ? 'Save Changes' : 'Add Account'}
+            {selectedAccount ? 'Save Changes' : 'Add Account'}
           </Button>
         </DialogActions>
       </Dialog>

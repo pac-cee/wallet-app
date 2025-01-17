@@ -19,14 +19,33 @@ export interface UserPreferences {
 }
 
 // Account types
+export type AccountType = 'bank' | 'mobile_money' | 'cash' | 'credit_card' | 'savings' | 'investment';
+
 export interface Account {
   _id: string;
   name: string;
-  type: 'bank' | 'cash' | 'mobile_money' | 'credit_card';
+  type: AccountType;
   balance: number;
   currency: string;
-  color?: string;
-  icon?: string;
+  description?: string;
+  accountNumber?: string;
+  bankName?: string;
+  mobileProvider?: string;
+  isDefault?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AccountFormData {
+  name: string;
+  type: AccountType;
+  balance: string;
+  currency: string;
+  description?: string;
+  accountNumber?: string;
+  bankName?: string;
+  mobileProvider?: string;
+  isDefault?: boolean;
 }
 
 // Category types
@@ -51,6 +70,16 @@ export interface Transaction {
   attachments?: string[];
   recurring?: boolean;
   recurringInterval?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+}
+
+export interface TransactionFormData {
+  description: string;
+  amount: string;
+  type: 'income' | 'expense';
+  category: string;
+  account: string;
+  date: string;
+  notes?: string;
 }
 
 // Budget types
@@ -108,15 +137,6 @@ export interface RegisterForm {
   email: string;
   password: string;
   confirmPassword: string;
-}
-
-export interface AccountForm {
-  name: string;
-  type: Account['type'];
-  balance: number;
-  currency: string;
-  color?: string;
-  icon?: string;
 }
 
 export interface CategoryForm {

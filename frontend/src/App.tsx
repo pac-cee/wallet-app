@@ -16,6 +16,9 @@ const Transactions = React.lazy(() => import('./pages/Transactions'));
 const Categories = React.lazy(() => import('./pages/Categories'));
 const Reports = React.lazy(() => import('./pages/Reports'));
 const Settings = React.lazy(() => import('./pages/Settings'));
+const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
+const OAuthCallback = React.lazy(() => import('./pages/OAuthCallback'));
 
 // Protected Route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -42,6 +45,33 @@ const AppRoutes = () => {
       <Route path="/register" element={
         <PublicRoute>
           <Register />
+        </PublicRoute>
+      } />
+      <Route path="/forgot-password" element={
+        <PublicRoute>
+          <ForgotPassword />
+        </PublicRoute>
+      } />
+      <Route path="/reset-password" element={
+        <PublicRoute>
+          <ResetPassword />
+        </PublicRoute>
+      } />
+
+      {/* OAuth callback routes */}
+      <Route path="/auth/google/callback" element={
+        <PublicRoute>
+          <OAuthCallback />
+        </PublicRoute>
+      } />
+      <Route path="/auth/github/callback" element={
+        <PublicRoute>
+          <OAuthCallback />
+        </PublicRoute>
+      } />
+      <Route path="/auth/twitter/callback" element={
+        <PublicRoute>
+          <OAuthCallback />
         </PublicRoute>
       } />
 

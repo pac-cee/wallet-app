@@ -2,102 +2,78 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const morgan = require('morgan');
-const path = require('path');
 const dotenv = require('dotenv');
 
-// Load environment variables based on NODE_ENV
-const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
-dotenv.config({ path: path.join(__dirname, envFile) });
+// Import routes
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+const walletRoutes = require('./routes/walletRoutes');
+const transactionRoutes = require('./routes/transactionRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const budgetRoutes = require('./routes/budgetRoutes');
+const reportRoutes = require('./routes/reportRoutes');
+const accountRoutes = require('./routes/accountRoutes');
 
-console.log('MongoDB URI:', process.env.MONGODB_URI); // For debugging
+// Load environment variables
+dotenv.config();
 
 const app = express();
 
 // Middleware
-app.use(express.json());
 app.use(morgan('dev'));
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
-// CORS configuration
-const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://wallet-app-frontend.onrender.com', process.env.CORS_ORIGIN]
-    : 'http://localhost:3000',
-  credentials: true,
-  optionsSuccessStatus: 200
-};
-app.use(cors(corsOptions));
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
-    environment: process.env.NODE_ENV,
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-  });
-});
-
-// Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/transactions', require('./routes/transactionRoutes'));
-app.use('/api/wallets', require('./routes/walletRoutes'));
-app.use('/api/categories', require('./routes/categoryRoutes'));
-app.use('/api/budgets', require('./routes/budgetRoutes'));
-app.use('/api/reports', require('./routes/reportRoutes'));
+// Mount routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/wallets', walletRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/budgets', budgetRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/accounts', accountRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  
-  if (err.name === 'ValidationError') {
-    return res.status(400).json({
-      error: 'Validation Error',
-      message: err.message
-    });
-  }
-  
-  if (err.name === 'UnauthorizedError') {
-    return res.status(401).json({
-      error: 'Unauthorized',
-      message: 'Invalid token or no token provided'
-    });
-  }
-  
-  res.status(err.status || 500).json({
-    error: err.name || 'Internal Server Error',
-    message: err.message || 'Something went wrong'
-  });
+  console.error(err.stack);
+  res.status(500).json({ message: 'Something went wrong!' });
 });
 
-const PORT = process.env.PORT || 5002;
-
 // MongoDB connection with retry logic
-const connectWithRetry = async () => {
-  const options = {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 10000,
-    heartbeatFrequencyMS: 2000,
-    retryWrites: true,
-    w: 'majority',
-    dbName: 'wallet-app1'
-  };
-
+const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, options);
-    console.log('MongoDB Connected Successfully');
-    
-    // Start server only after successful DB connection
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
     });
-  } catch (err) {
-    console.error('MongoDB connection error:', err);
-    console.log('Retrying connection in 5 seconds...');
-    setTimeout(connectWithRetry, 5000);
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    
+    // Only start server after successful DB connection
+    const PORT = process.env.PORT || 5002;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    console.log('Retrying in 5 seconds...');
+    setTimeout(connectDB, 5000);
   }
 };
 
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Promise Rejection:', err);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
 // Initial connection attempt
-console.log('Connecting to MongoDB...');
-connectWithRetry();
+connectDB();

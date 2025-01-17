@@ -32,6 +32,7 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { categoriesAPI } from '../services/api';
 import { useNotification } from '../contexts/NotificationContext';
+import CreateDefaultCategories from '../components/category/CreateDefaultCategories';
 
 interface SubCategory {
   _id: string;
@@ -287,13 +288,16 @@ const Categories = () => {
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Categories</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-        >
-          Add Category
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <CreateDefaultCategories onSuccess={fetchCategories} />
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => handleOpenDialog()}
+          >
+            Add Category
+          </Button>
+        </Box>
       </Box>
 
       <Grid container spacing={3}>

@@ -38,14 +38,45 @@ api.interceptors.response.use(
 
 // Auth API
 const authAPI = {
-  register: (data) => api.post('/users', data),
+  register: (data) => api.post('/users/register', data),
   login: (data) => api.post('/users/login', data),
   verify: () => api.get('/users/profile'),
   updateProfile: (data) => api.put('/users/profile', data),
-  // Social login endpoints
-  googleLogin: (token) => api.post('/users/auth/google', { token }),
-  githubLogin: (code) => api.post('/users/auth/github', { code }),
-  appleLogin: (token) => api.post('/users/auth/apple', { token }),
+  
+  // Social login methods
+  loginWithGoogle: async () => {
+    const googleProvider = new window.google.accounts.oauth2.initCodeClient({
+      client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+      scope: 'email profile',
+      callback: async (response) => {
+        if (response.code) {
+          return api.post('/users/auth/google', { code: response.code });
+        }
+      },
+    });
+    googleProvider.requestCode();
+  },
+
+  loginWithGithub: async () => {
+    const githubClientId = process.env.REACT_APP_GITHUB_CLIENT_ID;
+    const redirectUri = `${window.location.origin}/auth/github/callback`;
+    const scope = 'user:email';
+    
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${redirectUri}&scope=${scope}`;
+  },
+
+  loginWithTwitter: async () => {
+    const twitterClientId = process.env.REACT_APP_TWITTER_CLIENT_ID;
+    const redirectUri = `${window.location.origin}/auth/twitter/callback`;
+    const scope = 'tweet.read users.read';
+    
+    window.location.href = `https://twitter.com/i/oauth2/authorize?client_id=${twitterClientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code`;
+  },
+
+  // Handle OAuth callbacks
+  handleGoogleCallback: (code) => api.post('/users/auth/google/callback', { code }),
+  handleGithubCallback: (code) => api.post('/users/auth/github/callback', { code }),
+  handleTwitterCallback: (code) => api.post('/users/auth/twitter/callback', { code }),
 };
 
 // Wallets API
@@ -66,6 +97,7 @@ const transactionsAPI = {
   update: (id, data) => api.put(`/transactions/${id}`, data),
   delete: (id) => api.delete(`/transactions/${id}`),
   getReport: (params) => api.get('/transactions/report', { params }),
+  getSummary: (params) => api.get('/transactions/summary', { params }),
 };
 
 // Categories API
@@ -80,11 +112,11 @@ const categoriesAPI = {
 // Reports API
 const reportsAPI = {
   getSummary: (params) => api.get('/reports/summary', { params }),
-  getCategoryReport: (params) => api.get('/reports/category', { params }),
+  getCategoryReport: (params) => api.get('/reports/categories', { params }),
   getBudgetReport: (params) => api.get('/reports/budget', { params }),
-  exportReport: (type, params) => api.get(`/reports/export/${type}`, { 
-    params,
-    responseType: 'blob',
+  exportReport: (type, params) => api.get('/reports/export', {
+    params: { ...params, type },
+    responseType: 'blob'
   }),
 };
 

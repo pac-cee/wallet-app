@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
-const Transaction = require('../models/transactionModel');
-const Wallet = require('../models/walletModel');
+const Transaction = require('../models/Transaction');
+const Wallet = require('../models/Wallet');
+const mongoose = require('mongoose');
 
 // @desc    Get all transactions
 // @route   GET /api/transactions
@@ -139,6 +140,80 @@ const deleteTransaction = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Get transaction summary
+// @route   GET /api/transactions/summary
+// @access  Private
+const getTransactionSummary = asyncHandler(async (req, res) => {
+  const { startDate, endDate } = req.query;
+  const query = {
+    user: req.user._id,
+    date: {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate)
+    }
+  };
+
+  // Get total income and expense
+  const [totals, categoryBreakdown] = await Promise.all([
+    Transaction.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: null,
+          totalIncome: {
+            $sum: {
+              $cond: [{ $eq: ['$type', 'income'] }, '$amount', 0]
+            }
+          },
+          totalExpense: {
+            $sum: {
+              $cond: [{ $eq: ['$type', 'expense'] }, '$amount', 0]
+            }
+          }
+        }
+      }
+    ]),
+    Transaction.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: '$category',
+          amount: { $sum: '$amount' }
+        }
+      },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'category'
+        }
+      },
+      { $unwind: '$category' },
+      {
+        $project: {
+          category: '$category.name',
+          amount: 1,
+          type: '$category.type'
+        }
+      }
+    ])
+  ]);
+
+  // Get transactions for the period
+  const transactions = await Transaction.find(query)
+    .sort({ date: -1 })
+    .populate('category', 'name color type')
+    .populate('wallet', 'name balance');
+
+  res.json({
+    totalIncome: totals[0]?.totalIncome || 0,
+    totalExpense: totals[0]?.totalExpense || 0,
+    categoryBreakdown,
+    transactions
+  });
+});
+
 module.exports = {
   getAllTransactions,
   createTransaction,
@@ -146,4 +221,5 @@ module.exports = {
   getTransactionById,
   updateTransaction,
   deleteTransaction,
+  getTransactionSummary,
 };

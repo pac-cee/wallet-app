@@ -11,14 +11,14 @@ import {
   IconButton,
   InputAdornment,
   Divider,
+  Stack,
 } from '@mui/material';
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import GoogleIcon from '@mui/icons-material/Google';
 import GitHubIcon from '@mui/icons-material/GitHub';
-import AppleIcon from '@mui/icons-material/Apple';
-import { getSocialLoginUrl } from '../utils/socialAuth';
+import TwitterIcon from '@mui/icons-material/Twitter';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const { login } = useAuth();
+  const { login, loginWithGoogle, loginWithGithub, loginWithTwitter } = useAuth();
 
   useEffect(() => {
     // Check for success message from registration
@@ -59,9 +59,6 @@ const Login = () => {
       setError('');
       setLoading(true);
       
-      // Log the form data being sent
-      console.log('Submitting login with:', formData);
-      
       await login({ 
         email: formData.email, 
         password: formData.password,
@@ -85,14 +82,25 @@ const Login = () => {
     }
   };
 
-  const handleSocialLogin = (provider: 'google' | 'github' | 'apple') => {
+  const handleSocialLogin = async (provider: 'google' | 'github' | 'twitter') => {
     try {
       setError('');
       setLoading(true);
-      window.location.href = getSocialLoginUrl(provider);
-    } catch (err: any) {
+      switch (provider) {
+        case 'google':
+          await loginWithGoogle();
+          break;
+        case 'github':
+          await loginWithGithub();
+          break;
+        case 'twitter':
+          await loginWithTwitter();
+          break;
+      }
+    } catch (err) {
+      setError('Failed to login with ' + provider);
       console.error('Social login error:', err);
-      setError('Failed to authenticate with social provider');
+    } finally {
       setLoading(false);
     }
   };
@@ -123,44 +131,6 @@ const Login = () => {
               {error}
             </Alert>
           )}
-
-          <Box sx={{ mb: 3 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<GoogleIcon />}
-              onClick={() => handleSocialLogin('google')}
-              sx={{ mb: 1 }}
-              disabled={loading}
-            >
-              Continue with Google
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<GitHubIcon />}
-              onClick={() => handleSocialLogin('github')}
-              sx={{ mb: 1 }}
-              disabled={loading}
-            >
-              Continue with GitHub
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<AppleIcon />}
-              onClick={() => handleSocialLogin('apple')}
-              disabled={loading}
-            >
-              Continue with Apple
-            </Button>
-          </Box>
-
-          <Divider sx={{ mb: 3 }}>
-            <Typography variant="body2" color="text.secondary">
-              OR
-            </Typography>
-          </Divider>
 
           <Box component="form" onSubmit={handleSubmit}>
             <TextField
@@ -202,19 +172,62 @@ const Login = () => {
                 ),
               }}
             />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-              disabled={loading}
-            >
-              {loading ? 'Signing In...' : 'Sign In'}
-            </Button>
+            <Box sx={{ mt: 3, mb: 2 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? 'Logging in...' : 'Login'}
+              </Button>
+            </Box>
+
+            <Divider sx={{ my: 2 }}>OR</Divider>
+
+            <Stack spacing={2} sx={{ mt: 2 }}>
+              <Button
+                startIcon={<GoogleIcon />}
+                variant="outlined"
+                fullWidth
+                onClick={() => handleSocialLogin('google')}
+                disabled={loading}
+              >
+                Continue with Google
+              </Button>
+              <Button
+                startIcon={<GitHubIcon />}
+                variant="outlined"
+                fullWidth
+                onClick={() => handleSocialLogin('github')}
+                disabled={loading}
+              >
+                Continue with GitHub
+              </Button>
+              <Button
+                startIcon={<TwitterIcon />}
+                variant="outlined"
+                fullWidth
+                onClick={() => handleSocialLogin('twitter')}
+                disabled={loading}
+              >
+                Continue with Twitter
+              </Button>
+            </Stack>
+
             <Box sx={{ textAlign: 'center' }}>
-              <Link component={RouterLink} to="/register" variant="body2">
-                {"Don't have an account? Sign Up"}
+              <Link component={RouterLink} to="/forgot-password" variant="body2">
+                Forgot password?
               </Link>
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="body2">
+                  Don't have an account?{' '}
+                  <Link component={RouterLink} to="/register" variant="body2">
+                    Sign Up
+                  </Link>
+                </Typography>
+              </Box>
             </Box>
           </Box>
         </Paper>
