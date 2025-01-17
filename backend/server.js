@@ -22,11 +22,18 @@ const app = express();
 // Middleware
 app.use(morgan('dev'));
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Server is running' });
+});
 
 // Mount routes
 app.use('/api/auth', authRoutes);
@@ -41,7 +48,12 @@ app.use('/api/accounts', accountRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+  const statusCode = err.statusCode || 500;
+  res.status(statusCode).json({
+    status: 'error',
+    message: err.message || 'Something went wrong!',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
 });
 
 // MongoDB connection with retry logic
@@ -49,31 +61,27 @@ const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
       serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
+      retryWrites: true,
+      w: 'majority'
     });
     console.log(`MongoDB Connected: ${conn.connection.host}`);
-    
-    // Only start server after successful DB connection
-    const PORT = process.env.PORT || 5002;
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
   } catch (error) {
     console.error('MongoDB connection error:', error);
-    console.log('Retrying in 5 seconds...');
+    // Retry connection after 5 seconds
     setTimeout(connectDB, 5000);
   }
 };
+
+// Connect to MongoDB
+connectDB();
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Promise Rejection:', err);
 });
 
-// Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
+// Start server
+const PORT = process.env.PORT || 5002;
+app.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
-
-// Initial connection attempt
-connectDB();
