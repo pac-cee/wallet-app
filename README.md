@@ -8,6 +8,10 @@ A comprehensive, full-stack personal finance management application with powerfu
   ## Test users
   -e-mail: test@example.com --> **password: Test123!**
    -john@example.com --> **password: Password123.**
+## The reason of creating test users was :
+--- Due to limited cloud storage for handling many users---
+--- This is to  ensure functionality of features and flow of the database ---\
+---  Inactive features are being worked on ----
   
 
 ## 📚 Table of Contents
