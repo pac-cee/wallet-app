@@ -3,8 +3,8 @@
 A comprehensive, full-stack personal finance management application with powerful features for tracking expenses, managing multiple accounts, and visualizing your financial journey.
 
 ## 🌐 Live App
-- Frontend: https://wallet-app-frontend-cxal.onrender.com
-- Backend API: https://wallet-app-backend-bj9j.onrender.com/api
+- Frontend: 
+- Backend API: 
   ## Test users
   -e-mail: test@example.com --> **password: Test123!**
    -john@example.com --> **password: Password123.**
